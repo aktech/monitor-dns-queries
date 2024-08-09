@@ -1,0 +1,29 @@
+name: Monitor DNS queries
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Monitor DNS queries
+        run: |
+          interface=$(ip route | grep default | awk '{print $5}')
+          echo "Network interface: $interface"
+          sudo tcpdump -i "$interface" 'dst port 53' -l >> /tmp/dns_queries.log &
+
+      - name: Do some DNS queries
+        run: |
+          curl google.com
+          curl x.com
+          curl github.com
+
+      - name: DNS Queries
+        run: |
+          cat /tmp/dns_queries.log
